@@ -28,7 +28,7 @@ def prepare_corpus(config):
                 corpus.append(sentence.split(' '))
     print('corpus length: ',len(corpus))
     print('sample:\n',corpus[77])
-    with open(join(rootpath,'corpus.pkl'),'wb') as f:
+    with open(join(rootpath,config['corpus']['corpus_name']),'wb') as f:
         pickle.dump(corpus,f)
 
 def analysis(corpus):
@@ -44,7 +44,7 @@ def analysis(corpus):
     print(extra_word_dic)
 
 def read_corpus(config):
-    with open(config['corpus']['corpus_path'],'rb') as f:
+    with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
         corpus = pickle.load(f)
     return corpus
 
@@ -57,7 +57,8 @@ def train(corpus,config):
     # TODO: extract word to id and word embedding
 
 def main():
-    config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba'},
+    config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
+                        'corpus_name':'corpus.pkl'},
               'model':{'emb_size':'',
                        'n_gram':3},
               'train':{'num_epochs':100}
