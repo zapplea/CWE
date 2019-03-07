@@ -44,15 +44,16 @@ def analysis(corpus):
                     extra_word_dic[word]=[sentence]
                 else:
                     extra_word_dic[word].append(sentence)
-                continue
+                break
     lang_count = 0
     for sentence in corpus:
         for word in sentence:
             if re.search(u'[a-zA-Z0-9]*',word):
                 lang_count+=1
-    for key in extra_word_dic:
-        print(extra_word_dic[key])
-        print('=================')
+                break
+    # for key in extra_word_dic:
+    #     print(extra_word_dic[key])
+    #     print('=================')
     print('etrax total nums: ',extra_count)
     print('lang total nums: ',lang_count)
 
