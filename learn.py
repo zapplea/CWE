@@ -97,9 +97,9 @@ def main():
     corpus = read_corpus(config)
     print('Done!')
 
-    print('Analysis ...')
-    analysis(corpus)
-    print('Done!')
+    # print('Analysis ...')
+    # analysis(corpus)
+    # print('Done!')
     print('Start training')
     train(corpus,config)
     print('Done!')
