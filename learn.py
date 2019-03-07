@@ -24,14 +24,16 @@ def train(corpus,config):
     print(model.embedding_for("this"))
 
 def main():
-    config = {'corpus':{'rootpath':'/datastore/liu121/sentidata2/data/meituan_jieba'},
+    config = {'corpus':{'rootpath':'/home/yibing/Documents/data/nlp/meituan_jieba'},
               'model':{'emb_size':'',
                        'n_gram':3},
               'train':{'num_epochs':100}
               }
     corpus = read_corpus(config)
     print(corpus.shape)
-    print(corpus[0])
+    print(corpus[0][0])
+    print(corpus[0][1])
+    print(corpus[0][2])
 
 if __name__ == "__main__":
     main()
