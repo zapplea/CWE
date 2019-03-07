@@ -26,7 +26,15 @@ def prepare_corpus(config):
         data = pd.read_pickle(join(rootpath,fname))[:,1]
         for review in data:
             for sentence in review:
-                corpus.append(sentence.split(' '))
+                is_exceedmax = False
+                sentence = sentence.split(' ')
+                for word in sentence:
+                    if len(list(word)) > config['corpus']['max_word_len']:
+                        is_exceedmax = True
+                        break
+                if is_exceedmax:
+                    continue
+                corpus.append(sentence)
     print('corpus length: ',len(corpus))
     print('sample:\n',corpus[77])
     with open(join(rootpath,config['corpus']['corpus_name']),'wb') as f:
@@ -51,9 +59,9 @@ def analysis(corpus):
             if re.search(u'[a-zA-Z0-9]*',word):
                 lang_count+=1
                 break
-    # for key in extra_word_dic:
-    #     print(extra_word_dic[key])
-    #     print('=================')
+    for key in extra_word_dic:
+        print(extra_word_dic[key])
+        print('=================')
     print('etrax total nums: ',extra_count)
     print('lang total nums: ',lang_count)
 
@@ -73,15 +81,16 @@ def train(corpus,config):
 
 def main():
     config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
-                        'corpus_name':'corpus.pkl'},
+                        'corpus_name':'corpus.pkl',
+                        'max_word_len':11},
               'model':{'emb_size':'',
                        'n_gram':3},
               'train':{'num_epochs':100}
               }
-    # print('Prepare corpus...')
-    # prepare_corpus(config)
-    # print('Done!')
-    # exit()
+    print('Prepare corpus...')
+    prepare_corpus(config)
+    print('Done!')
+    exit()
     print('Read corpus...')
     corpus = read_corpus(config)
     print('Done!')
