@@ -22,7 +22,7 @@ def prepare_corpus(config):
     corpus = []
     # TODO: eliminate long word
     for fname in files_name:
-        data = pd.read_pickle(join(rootpath,fname)).values[:,1]
+        data = pd.read_pickle(join(rootpath,fname))[:,1]
         for review in data:
             for sentence in review:
                 corpus.append(sentence.split(' '))
