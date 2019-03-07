@@ -4,6 +4,7 @@ from os.path import isfile, join
 import pickle
 import numpy as np
 import pandas as pd
+import re
 import getpass
 username = getpass.getuser()
 
@@ -34,19 +35,27 @@ def prepare_corpus(config):
 def analysis(corpus):
     max_len = 11
     extra_word_dic = {}
-    count = 0
+    extra_count = 0
     for sentence in corpus:
         for word in sentence:
             if len(list(word))>max_len:
-                count+=1
+                extra_count+=1
                 if word not in extra_word_dic:
                     extra_word_dic[word]=[sentence]
                 else:
                     extra_word_dic[word].append(sentence)
+                continue
+    lang_count = 0
+    for sentence in corpus:
+        for word in sentence:
+            if re.search(u'[a-zA-Z0-9]*',word):
+                lang_count+=1
     for key in extra_word_dic:
         print(extra_word_dic[key])
         print('=================')
-    print('total nums: ',count)
+    print('etrax total nums: ',extra_count)
+    print('lang total nums: ',lang_count)
+
 
 def read_corpus(config):
     with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
