@@ -34,9 +34,11 @@ def prepare_corpus(config):
 def analysis(corpus):
     max_len = 11
     extra_word_dic = {}
+    count = 0
     for sentence in corpus:
         for word in sentence:
             if len(list(word))>max_len:
+                count+=1
                 if word not in extra_word_dic:
                     extra_word_dic[word]=[sentence]
                 else:
@@ -44,6 +46,7 @@ def analysis(corpus):
     for key in extra_word_dic:
         print(extra_word_dic[key])
         print('=================')
+    print('total nums: ',count)
 
 def read_corpus(config):
     with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
