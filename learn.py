@@ -3,15 +3,15 @@ from os import listdir
 from os.path import isfile, join
 import pickle
 import numpy as np
+import pandas as pd
 
 def read_corpus(config):
     rootpath = config['corpus']['rootpath']
     files_name = [f for f in listdir(rootpath) if isfile(join(rootpath, f))]
     corpus = []
     for fname in files_name:
-        with open(join(rootpath,fname),'rb') as f:
-            data = pickle.load(f)
-            corpus.append(data)
+        data = pd.read_pickle(join(rootpath,fname))
+        corpus.append(data.values)
     corpus = np.concatenate(corpus,axis=0)
     return corpus
 
