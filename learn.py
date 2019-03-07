@@ -78,6 +78,7 @@ def train(corpus,config):
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
     # TODO: extract word to id and word embedding
+    # TODO: prepare character vocabulary.
 
 def main():
     config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
@@ -99,7 +100,9 @@ def main():
     print('Analysis ...')
     analysis(corpus)
     print('Done!')
-    # train(corpus,config)
+    print('Start training')
+    train(corpus,config)
+    print('Done!')
 
 if __name__ == "__main__":
     main()
