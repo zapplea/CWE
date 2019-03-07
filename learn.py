@@ -87,10 +87,11 @@ def main():
                        'n_gram':3},
               'train':{'num_epochs':100}
               }
-    print('Prepare corpus...')
-    prepare_corpus(config)
-    print('Done!')
-    exit()
+    # if you decide to run prepare corpus, need to delete corpus.pkl.
+    # print('Prepare corpus...')
+    # prepare_corpus(config)
+    # print('Done!')
+    # exit()
     print('Read corpus...')
     corpus = read_corpus(config)
     print('Done!')
