@@ -5,3 +5,4 @@ corpus = [["this", "is", "a", "comment", "."], ["this", "is", "another", "commen
 model = tf_glove.GloVeModel(embedding_size=300,context_size=3)
 model.fit_to_corpus(corpus)
 model.train(num_epochs=100)
+print(model.embedding_for("this"))
