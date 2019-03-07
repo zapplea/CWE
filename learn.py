@@ -57,7 +57,7 @@ def train(corpus,config):
     # TODO: extract word to id and word embedding
 
 def main():
-    config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba/'},
+    config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba'},
               'model':{'emb_size':'',
                        'n_gram':3},
               'train':{'num_epochs':100}
