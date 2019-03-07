@@ -62,21 +62,18 @@ def main():
                        'n_gram':3},
               'train':{'num_epochs':100}
               }
-    if username == 'yibing':
-        resave()
-    else:
-        print('Prepare corpus...')
-        prepare_corpus(config)
-        print('Done!')
-        exit()
-        print('Read corpus...')
-        corpus = read_corpus(config)
-        print('Done!')
+    print('Prepare corpus...')
+    prepare_corpus(config)
+    print('Done!')
+    exit()
+    print('Read corpus...')
+    corpus = read_corpus(config)
+    print('Done!')
 
-        print('Analysis ...')
-        analysis(corpus)
-        print('Done!')
-        # train(corpus,config)
+    print('Analysis ...')
+    analysis(corpus)
+    print('Done!')
+    # train(corpus,config)
 
 if __name__ == "__main__":
     main()
