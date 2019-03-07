@@ -32,3 +32,6 @@ def main():
     corpus = read_corpus(config)
     print(corpus.shape)
     print(corpus[0])
+
+if __name__ == "__main__":
+    main()
