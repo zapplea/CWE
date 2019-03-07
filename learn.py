@@ -62,10 +62,10 @@ def main():
                        'n_gram':3},
               'train':{'num_epochs':100}
               }
-    print('Prepare corpus...')
-    prepare_corpus(config)
-    print('Done!')
-    exit()
+    # print('Prepare corpus...')
+    # prepare_corpus(config)
+    # print('Done!')
+    # exit()
     print('Read corpus...')
     corpus = read_corpus(config)
     print('Done!')
