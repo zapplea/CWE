@@ -41,7 +41,9 @@ def analysis(corpus):
                     extra_word_dic[word]=[sentence]
                 else:
                     extra_word_dic[word].append(sentence)
-    print(extra_word_dic.keys())
+    for key in extra_word_dic:
+        print(extra_word_dic[key])
+        print('=================')
 
 def read_corpus(config):
     with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
