@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 import os
 from random import shuffle
 import tensorflow as tf
+import numpy as np
 
 
 class NotTrainedError(Exception):
@@ -13,7 +14,7 @@ class NotFitToCorpusError(Exception):
 
 class GloVeModel():
     def __init__(self, embedding_size, context_size, max_vocab_size=100000, min_occurrences=1,
-                 scaling_factor=3/4, cooccurrence_cap=100, batch_size=512, learning_rate=0.05):
+                 scaling_factor=3/4, cooccurrence_cap=100, batch_size=512, learning_rate=0.05,max_word_len=11):
         self.embedding_size = embedding_size
         if isinstance(context_size, tuple):
             self.left_context, self.right_context = context_size
@@ -27,6 +28,7 @@ class GloVeModel():
         self.cooccurrence_cap = cooccurrence_cap
         self.batch_size = batch_size
         self.learning_rate = learning_rate
+        self.max_word_len = max_word_len
         self.__words = None
         self.__word_to_id = None
         self.__cooccurrence_matrix = None
@@ -52,11 +54,58 @@ class GloVeModel():
             raise ValueError("No coccurrences in corpus. Did you try to reuse a generator?")
         self.__words = [word for word, count in word_counts.most_common(vocab_size)
                         if count >= min_occurrences]
+        # generate word vocabulary
         self.__word_to_id = {word: i for i, word in enumerate(self.__words)}
+        # generate char vocabulary
+        self.__chars = set()
+        for word in self.__words:
+            if word == '#OTHER#':
+                continue
+            char_ls = list(word)
+            for char in char_ls:
+                self.__chars.add(char)
+        self.__chars = list(self.__chars)
+        self.__chars.insert(0, '#PAD#')
+        self.__char_to_id = {char: i for i, char in enumerate(self.__chars)}
+        self.__char_vocab_size = len(self.__char_to_id)
+
+        # prepare input matrix
+        # convert word_txt in cooccurrence_counts to word id. This is the batch.
         self.__cooccurrence_matrix = {
             (self.__word_to_id[words[0]], self.__word_to_id[words[1]]): count
             for words, count in cooccurrence_counts.items()
             if words[0] in self.__word_to_id and words[1] in self.__word_to_id}
+        self.__cooccurrence_matrix = {}
+        for words,count in cooccurrence_counts.items():
+            if words[0] in self.__word_to_id and words[1] in self.__word_to_id:
+                words_id_pair = (self.__word_to_id[words[0]], self.__word_to_id[words[1]])
+                word0_char_ls = []
+                if words[0] == '#OTHER#':
+                    word0_char_ls.append(self.__char_to_id['#PAD#'])
+                else:
+                    for char in list(words[0]):
+                        word0_char_ls.append(self.__char_to_id[char])
+                if len(word0_char_ls)<self.max_word_len:
+                    word0_char_ls.extend(np.zeros(shape=(self.max_word_len-len(word0_char_ls),),dtype='int32').tolist())
+
+                word1_char_ls = []
+                if words[1] == '#OTHER#':
+                    word1_char_ls.append(self.__char_to_id['#PAD#'])
+                else:
+                    for char in list(words[1]):
+                        word1_char_ls.append(self.__char_to_id[char])
+                if len(word1_char_ls)<self.max_word_len:
+                    word1_char_ls.extend(np.zeros(shape=(self.max_word_len-len(word1_char_ls),),dtype='int32').tolist())
+                chars_id_pair = (tuple(word0_char_ls),tuple(word1_char_ls))
+                self.__cooccurrence_matrix[(words_id_pair,chars_id_pair)] = count
+
+    def char_enhance(self):
+        # DONE: add char input placeholder
+        self.__focal_chars_input = tf.placeholder(tf.int32, shape=(None, self.max_word_len), name='focal_chars')
+        self.__context_chars_input = tf.placeholder(tf.int32, shape=(None, self.max_word_len), name='context_chars')
+        char_tables =  tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_size], 1.0, -1.0),
+                                   name="char_embeddings")
+
 
     def __build_graph(self):
         self.__graph = tf.Graph()
@@ -65,13 +114,21 @@ class GloVeModel():
                                     name='max_cooccurrence_count')
             scaling_factor = tf.constant([self.scaling_factor], dtype=tf.float32,
                                          name="scaling_factor")
+            # FIXED: eliminate influenced of self.batch_size
+            # self.__focal_input = tf.placeholder(tf.int32, shape=[self.batch_size],
+            #                                     name="focal_words")
+            # self.__context_input = tf.placeholder(tf.int32, shape=[self.batch_size],
+            #                                       name="context_words")
+            # self.__cooccurrence_count = tf.placeholder(tf.float32, shape=[self.batch_size],
+            #                                            name="cooccurrence_count")
 
-            self.__focal_input = tf.placeholder(tf.int32, shape=[self.batch_size],
+            self.__focal_input = tf.placeholder(tf.int32, shape=[None],
                                                 name="focal_words")
-            self.__context_input = tf.placeholder(tf.int32, shape=[self.batch_size],
+            self.__context_input = tf.placeholder(tf.int32, shape=[None],
                                                   name="context_words")
-            self.__cooccurrence_count = tf.placeholder(tf.float32, shape=[self.batch_size],
+            self.__cooccurrence_count = tf.placeholder(tf.float32, shape=[None],
                                                        name="cooccurrence_count")
+
 
             focal_embeddings = tf.Variable(
                 tf.random_uniform([self.vocab_size, self.embedding_size], 1.0, -1.0),
@@ -130,9 +187,11 @@ class GloVeModel():
             for epoch in range(num_epochs):
                 shuffle(batches)
                 for batch_index, batch in enumerate(batches):
-                    i_s, j_s, counts = batch
-                    if len(counts) != self.batch_size:
-                        continue
+                    # TODO:feed i\j_chars to the model
+                    i_s, j_s,i_chars,j_chars, counts = batch
+                    # FIXED:this condition should be eliminated, otherwise several data in the tail will be wasted.
+                    # if len(counts) != self.batch_size:
+                    #     continue
                     feed_dict = {
                         self.__focal_input: i_s,
                         self.__context_input: j_s,
@@ -160,10 +219,10 @@ class GloVeModel():
         if self.__cooccurrence_matrix is None:
             raise NotFitToCorpusError(
                 "Need to fit model to corpus before preparing training batches.")
-        cooccurrences = [(word_ids[0], word_ids[1], count)
-                         for word_ids, count in self.__cooccurrence_matrix.items()]
-        i_indices, j_indices, counts = zip(*cooccurrences)
-        return list(_batchify(self.batch_size, i_indices, j_indices, counts))
+        cooccurrences = [(word_ids[0], word_ids[1],char_ids[0],char_ids[1], count)
+                         for (word_ids,char_ids), count in self.__cooccurrence_matrix.items()]
+        i_indices, j_indices, i_chars, j_chars, counts = zip(*cooccurrences)
+        return list(_batchify(self.batch_size, i_indices, j_indices,i_chars,j_chars, counts))
 
     @property
     def vocab_size(self):

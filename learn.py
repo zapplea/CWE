@@ -21,19 +21,16 @@ def prepare_corpus(config):
     rootpath = config['corpus']['corpus_path']
     files_name = [f for f in listdir(rootpath) if isfile(join(rootpath, f))]
     corpus = []
-    # TODO: eliminate long word
+    # TODO: convert long word to #OTHER#
     for fname in files_name:
         data = pd.read_pickle(join(rootpath,fname))[:,1]
         for review in data:
             for sentence in review:
-                is_exceedmax = False
                 sentence = sentence.split(' ')
-                for word in sentence:
+                for i in range(len(sentence)):
+                    word = sentence[i]
                     if len(list(word)) > config['corpus']['max_word_len']:
-                        is_exceedmax = True
-                        break
-                if is_exceedmax:
-                    continue
+                        sentence[i] = config['corpus']['OTHER']
                 corpus.append(sentence)
     print('corpus length: ',len(corpus))
     print('sample:\n',corpus[77])
@@ -77,13 +74,15 @@ def train(corpus,config):
     model = tf_glove.GloVeModel(embedding_size=config['model']['emb_size'],context_size=config['model']['n_gram'])
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
-    # TODO: extract word to id and word embedding
+    # TODO: extract word to id and word embedding, char to id and char embedding
     # TODO: prepare character vocabulary.
+    # TODO: set the vocab size
 
 def main():
     config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
                         'corpus_name':'corpus.pkl',
-                        'max_word_len':11},
+                        'max_word_len':11,
+                        'OTHER':'#OTHER#'},
               'model':{'emb_size':'',
                        'n_gram':3},
               'train':{'num_epochs':100}
