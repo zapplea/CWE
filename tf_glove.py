@@ -143,7 +143,7 @@ class GloVeModel():
         # Fixed: the #PAD# should be [0, 0, 0,....]
         char_embeddings =  tf.Variable(tf.random_uniform([self.char_vocab_size-1, self.char_embedding_size], 1.0, -1.0),
                                        name="char_embeddings")
-        padding_char_embedding = tf.Variable(tf.zeros([1,self.char_embedding_size],1.0,-1.0),
+        padding_char_embedding = tf.Variable(tf.zeros(shape=[1,self.char_embedding_size],dtype=tf.float32),
                                              name="padding_char_embeddings")
         self.__char_embeddings = tf.concat([padding_char_embedding,char_embeddings],axis=0)
         # Done: mask the padded word
