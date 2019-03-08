@@ -66,6 +66,7 @@ def analysis(corpus):
 def read_corpus(config):
     with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
         corpus = pickle.load(f)[:1000]
+    print('corpus size: ',len(corpus))
     return corpus
 
 def write_embedding(config,dic):
