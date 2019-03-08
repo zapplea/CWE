@@ -95,6 +95,7 @@ def train(corpus,config):
                                     char_embedding_size=config['model']['char_dim'],
                                     context_size=config['model']['n_gram'],
                                     max_word_len = config['corpus']['max_word_len'])
+    exit()
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
     word_embeddings = model.embeddings
