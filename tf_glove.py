@@ -138,7 +138,7 @@ class GloVeModel():
         :return: (batch size, char dim)
         """
         # Done: add char input placeholder
-        self.__focal_chars_input = tf.placeholder(dtype=tf.int32, shape=(self.batch_size, self.max_word_len), name='focal_chars')
+        self.__focal_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='focal_chars')
         self.__context_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='context_chars')
         # Fixed: the #PAD# should be [0, 0, 0,....]
         char_embeddings =  tf.Variable(tf.random_uniform([self.char_vocab_size-1, self.char_embedding_size], 1.0, -1.0),
@@ -150,11 +150,7 @@ class GloVeModel():
 
         # (batch size, max word len, char dim)
         focal_chars_mask = self.__padding_char_mask(self.__focal_chars_input)
-        print('lookup focal chars...')
-        print(self.__focal_chars_input)
-        focal_chars_embeddings = tf.nn.embedding_lookup(self.__focal_chars_input,self.__char_embeddings)#*focal_chars_mask
-        print('Done!')
-        exit()
+        focal_chars_embeddings = tf.nn.embedding_lookup(self.__char_embeddings,self.__focal_chars_input)*focal_chars_mask
         # (batch size,)
         focal_chars_seq_len = self.__char_seq_len(self.__focal_chars_input)
         # (batch size, char dim)
@@ -164,7 +160,7 @@ class GloVeModel():
 
         # (batch size, max word len, char dim)
         context_chars_mask = self.__padding_char_mask(self.__context_chars_input)
-        context_chars_embeddings = tf.nn.embedding_lookup(self.__context_chars_input,self.__char_embeddings)*context_chars_mask
+        context_chars_embeddings = tf.nn.embedding_lookup(self.__char_embeddings,self.__context_chars_input)*context_chars_mask
         # (batch size,)
         context_chars_seq_len = self.__char_seq_len(self.__context_chars_input)
         # (batch size, char dim)
