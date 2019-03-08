@@ -65,7 +65,7 @@ def analysis(corpus):
 
 def read_corpus(config):
     with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
-        corpus = pickle.load(f)
+        corpus = pickle.load(f)[:1000]
     return corpus
 
 def write_embedding(config,dic):
@@ -115,8 +115,8 @@ def main():
               'output':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwe_wordEmb.pkl',
                         'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwe_charEmb.pkl'}
               }
-    # if you decide to run prepare corpus, need to delete corpus.pkl.
-    if True:
+    if False:
+        # obedient:if you decide to run prepare corpus, need to delete corpus.pkl.
         print('Prepare corpus...')
         prepare_corpus(config)
         print('Done!')

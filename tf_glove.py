@@ -58,6 +58,7 @@ class GloVeModel():
                         if count >= min_occurrences]
         # generate word vocabulary
         self.__word_to_id = {word: i for i, word in enumerate(self.__words)}
+        print('word vocab size: ',len(self.__word_to_id))
         # generate char vocabulary
         self.__chars = set()
         for word in self.__words:
@@ -70,6 +71,7 @@ class GloVeModel():
         # Obedient: the padding char must be 0 because of embedding table when build the model.
         self.__chars.insert(0, '#PAD#')
         self.__char_to_id = {char: i for i, char in enumerate(self.__chars)}
+        print('char vocab size: ',len(self.__char_to_id))
 
         # prepare input matrix
         # convert word_txt in cooccurrence_counts to word id. This is the batch.
