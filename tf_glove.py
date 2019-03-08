@@ -37,9 +37,13 @@ class GloVeModel():
         self.__char_to_id = None
 
     def fit_to_corpus(self, corpus):
+        print('fit corpus...')
         self.__fit_to_corpus(corpus, self.max_vocab_size, self.min_occurrences,
                              self.left_context, self.right_context)
+        print('Done!')
+        print('build graph...')
         self.__build_graph()
+        print('Done!')
 
     def __fit_to_corpus(self, corpus, vocab_size, min_occurrences, left_size, right_size):
         word_counts = Counter()
