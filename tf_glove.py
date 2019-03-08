@@ -138,7 +138,7 @@ class GloVeModel():
         :return: (batch size, char dim)
         """
         # Done: add char input placeholder
-        self.__focal_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='focal_chars')
+        self.__focal_chars_input = tf.placeholder(dtype=tf.int32, shape=(self.batch_size, self.max_word_len), name='focal_chars')
         self.__context_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='context_chars')
         # Fixed: the #PAD# should be [0, 0, 0,....]
         char_embeddings =  tf.Variable(tf.random_uniform([self.char_vocab_size-1, self.char_embedding_size], 1.0, -1.0),
