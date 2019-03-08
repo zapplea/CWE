@@ -254,6 +254,7 @@ class GloVeModel():
                 summary_writer = tf.summary.FileWriter(log_dir, graph=session.graph)
             tf.global_variables_initializer().run()
             for epoch in range(num_epochs):
+                print('epoch num:%d'%epoch)
                 shuffle(batches)
                 for batch_index, batch in enumerate(batches):
                     # TODO:feed i\j_chars to the model
