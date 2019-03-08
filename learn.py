@@ -68,30 +68,58 @@ def read_corpus(config):
         corpus = pickle.load(f)
     return corpus
 
+def write_embedding(config,dic):
+    with open(config['output']['word_embeddings_path'],'wb') as f:
+        pickle.dump({'word_to_id':dic['word_to_id'],'word_embeddings':dic['word_embeddings']},f,protocol=4)
+
+    with open(config['output']['char_embeddings_path'],'wb') as f:
+        pickle.dump({'char_to_id':dic['char_to_id'],'char_embeddings':dic['char_embeddings']},f,protocol=4)
+
+
 def train(corpus,config):
     # corpus = [["this", "is", "a", "comment", "."], ["this", "is", "another", "comment", "."]]
 
-    model = tf_glove.GloVeModel(embedding_size=config['model']['emb_size'],context_size=config['model']['n_gram'])
+    model = tf_glove.GloVeModel(embedding_size=config['model']['word_dim'],
+                                char_embedding_size=config['model']['char_dim'],
+                                context_size=config['model']['n_gram'],
+                                max_word_len = config['corpus']['max_word_len'])
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
-    # TODO: extract word to id and word embedding, char to id and char embedding
-    # TODO: prepare character vocabulary.
-    # TODO: set the vocab size
+    word_embeddings = model.embeddings
+    padding_word_vec = np.zeros(shape=(1,config['model']['word_dim']))
+    word_embeddings = np.concatenate([padding_word_vec,word_embeddings],axis=0)
+    char_embeddings = model.char_embeddings
+    char_to_id = model.char_to_id
+    word_to_id = model.word_to_id
+    write_embedding(config,{'word_to_id':word_to_id,
+                            'char_to_id':char_to_id,
+                            'word_embeddings':word_embeddings,
+                            'char_embeddings':char_embeddings})
+    # Done: extract word to id and word embedding, char to id and char embedding
+    # Done: prepare character vocabulary.
+    # Done: add pad to word embedding
+    # fixed: max vocab size, should be all words??? max vocab size = 8 millions
+
+
 
 def main():
+    # obedient: Other must be #OTHER#
     config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
                         'corpus_name':'corpus.pkl',
                         'max_word_len':11,
                         'OTHER':'#OTHER#'},
-              'model':{'emb_size':'',
+              'model':{'word_dim':300,
+                       'char_dim':200,
                        'n_gram':3},
-              'train':{'num_epochs':100}
+              'train':{'num_epochs':100},
+              'output':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwe_wordEmb.pkl',
+                        'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwe_charEmb.pkl'}
               }
     # if you decide to run prepare corpus, need to delete corpus.pkl.
-    # print('Prepare corpus...')
-    # prepare_corpus(config)
-    # print('Done!')
-    # exit()
+    print('Prepare corpus...')
+    prepare_corpus(config)
+    print('Done!')
+    exit()
     print('Read corpus...')
     corpus = read_corpus(config)
     print('Done!')

@@ -13,9 +13,10 @@ class NotFitToCorpusError(Exception):
     pass
 
 class GloVeModel():
-    def __init__(self, embedding_size, context_size, max_vocab_size=100000, min_occurrences=1,
+    def __init__(self, embedding_size, char_embedding_size, context_size, max_vocab_size=8000000, min_occurrences=1,
                  scaling_factor=3/4, cooccurrence_cap=100, batch_size=512, learning_rate=0.05,max_word_len=11):
         self.embedding_size = embedding_size
+        self.char_embedding_size = char_embedding_size
         if isinstance(context_size, tuple):
             self.left_context, self.right_context = context_size
         elif isinstance(context_size, int):
@@ -33,6 +34,7 @@ class GloVeModel():
         self.__word_to_id = None
         self.__cooccurrence_matrix = None
         self.__embeddings = None
+        self.__char_to_id = None
 
     def fit_to_corpus(self, corpus):
         self.__fit_to_corpus(corpus, self.max_vocab_size, self.min_occurrences,
@@ -65,9 +67,9 @@ class GloVeModel():
             for char in char_ls:
                 self.__chars.add(char)
         self.__chars = list(self.__chars)
+        # Obedient: the padding char must be 0 because of embedding table when build the model.
         self.__chars.insert(0, '#PAD#')
         self.__char_to_id = {char: i for i, char in enumerate(self.__chars)}
-        self.__char_vocab_size = len(self.__char_to_id)
 
         # prepare input matrix
         # convert word_txt in cooccurrence_counts to word id. This is the batch.
@@ -95,17 +97,73 @@ class GloVeModel():
                     for char in list(words[1]):
                         word1_char_ls.append(self.__char_to_id[char])
                 if len(word1_char_ls)<self.max_word_len:
-                    word1_char_ls.extend(np.zeros(shape=(self.max_word_len-len(word1_char_ls),),dtype='int32').tolist())
+                    word1_char_ls.extend((np.ones(shape=(self.max_word_len-len(word1_char_ls),),dtype='int32')*self.padding_char_id).tolist())
                 chars_id_pair = (tuple(word0_char_ls),tuple(word1_char_ls))
                 self.__cooccurrence_matrix[(words_id_pair,chars_id_pair)] = count
 
-    def char_enhance(self):
-        # DONE: add char input placeholder
+    def __char_compress(self,chars_embeddings):
+        shape = chars_embeddings.get_shape()
+
+    def __padding_char_mask(self,char_ids):
+        padding = tf.ones_like(char_ids)*self.padding_char_id
+        condition = tf.equal(padding,char_ids)
+        # (batch size, max word len)
+        mask = tf.where(condition,tf.zeros_like(char_ids),tf.ones_like(char_ids))
+        mask = tf.tile(tf.expand_dims(mask,axis=2),multiples=[1,1,self.char_embedding_size])
+        return mask
+
+    def __char_seq_len(self,char_ids):
+        padding = tf.ones_like(char_ids) * self.padding_char_id
+        condition = tf.equal(padding, char_ids)
+        # (batch size, max word len)
+        temp = tf.where(condition,tf.zeros_like(char_ids),tf.ones_like(char_ids))
+        # (batch size, )
+        char_seq_len = tf.reduce_sum(temp,axis=1)
+        # TODO: some char like #OTHER#, its full padded, so, the length is 0
+        condition = tf.equal(char_seq_len,tf.zeros_like(char_seq_len))
+        # (batch size, )
+        char_seq_len = tf.where(condition,tf.ones_like(char_seq_len),char_seq_len)
+        return char_seq_len
+
+
+    def __char_enhance(self):
+        """
+
+        :return: (batch size, char dim)
+        """
+        # Done: add char input placeholder
         self.__focal_chars_input = tf.placeholder(tf.int32, shape=(None, self.max_word_len), name='focal_chars')
         self.__context_chars_input = tf.placeholder(tf.int32, shape=(None, self.max_word_len), name='context_chars')
-        char_tables =  tf.Variable(tf.random_uniform([self.vocab_size, self.embedding_size], 1.0, -1.0),
-                                   name="char_embeddings")
+        # Fixed: the #PAD# should be [0, 0, 0,....]
+        char_embeddings =  tf.Variable(tf.random_uniform([self.char_vocab_size-1, self.char_embedding_size], 1.0, -1.0),
+                                       name="char_embeddings")
+        padding_char_embedding = tf.Variable(tf.random_uniform([1,self.char_embedding_size],1.0,-1.0),
+                                             name="padding_char_embeddings")
+        self.__char_embeddings = tf.concat([padding_char_embedding,char_embeddings],axis=0)
+        # Done: mask the padded word
 
+        # (batch size, max word len, char dim)
+        focal_chars_mask = self.__padding_char_mask(self.__focal_chars_input)
+        focal_chars_embeddings = tf.nn.embedding_lookup([self.__focal_chars_input],self.__char_embeddings)*focal_chars_mask
+        # (batch size,)
+        focal_chars_seq_len = self.__char_seq_len(self.__focal_chars_input)
+        # (batch size, char dim)
+        focal_chars_denominator = tf.tile(tf.expand_dims(focal_chars_seq_len, axis=1), multiples=[1, self.char_embedding_size])
+        # (batch size, char dim)
+        focal_chars_embedding = tf.truediv(tf.reduce_sum(focal_chars_embeddings,axis=1),focal_chars_denominator)
+
+        # (batch size, max word len, char dim)
+        context_chars_mask = self.__padding_char_mask(self.__context_chars_input)
+        context_chars_embeddings = tf.nn.embedding_lookup([self.__context_chars_input],self.__char_embeddings)*context_chars_mask
+        # (batch size,)
+        context_chars_seq_len = self.__char_seq_len(self.__context_chars_input)
+        # (batch size, char dim)
+        context_chars_denominator = tf.tile(tf.expand_dims(context_chars_seq_len, axis=1),
+                                          multiples=[1, self.char_embedding_size])
+        # (batch size, char dim)
+        context_chars_embedding = tf.truediv(tf.reduce_sum(context_chars_embeddings,axis=1),context_chars_denominator)
+
+        return focal_chars_embedding,context_chars_embedding
 
     def __build_graph(self):
         self.__graph = tf.Graph()
@@ -136,14 +194,19 @@ class GloVeModel():
             context_embeddings = tf.Variable(
                 tf.random_uniform([self.vocab_size, self.embedding_size], 1.0, -1.0),
                 name="context_embeddings")
-
             focal_biases = tf.Variable(tf.random_uniform([self.vocab_size], 1.0, -1.0),
                                        name='focal_biases')
             context_biases = tf.Variable(tf.random_uniform([self.vocab_size], 1.0, -1.0),
                                          name="context_biases")
-
+            #(batch size, word dim)
             focal_embedding = tf.nn.embedding_lookup([focal_embeddings], self.__focal_input)
             context_embedding = tf.nn.embedding_lookup([context_embeddings], self.__context_input)
+
+            # (batch size, char dim)
+            focal_chars_embedding, context_chars_embedding = self.__char_enhance()
+            enhanced_focal_embedding = tf.concat([focal_embedding,focal_chars_embedding],axis=1)
+            enhanced_context_embedding = tf.concat([context_embedding, context_chars_embedding], axis=1)
+
             focal_bias = tf.nn.embedding_lookup([focal_biases], self.__focal_input)
             context_bias = tf.nn.embedding_lookup([context_biases], self.__context_input)
 
@@ -153,7 +216,7 @@ class GloVeModel():
                     tf.div(self.__cooccurrence_count, count_max),
                     scaling_factor))
 
-            embedding_product = tf.reduce_sum(tf.multiply(focal_embedding, context_embedding), 1)
+            embedding_product = tf.reduce_sum(tf.multiply(enhanced_focal_embedding, enhanced_context_embedding), 1)
 
             log_cooccurrences = tf.log(tf.to_float(self.__cooccurrence_count))
 
@@ -225,8 +288,16 @@ class GloVeModel():
         return list(_batchify(self.batch_size, i_indices, j_indices,i_chars,j_chars, counts))
 
     @property
+    def char_vocab_size(self):
+        return len(self.__char_to_id)
+
+    @property
     def vocab_size(self):
         return len(self.__words)
+
+    @property
+    def padding_char_id(self):
+        return self.__char_to_id['#PAD#']
 
     @property
     def words(self):
@@ -239,6 +310,15 @@ class GloVeModel():
         if self.__embeddings is None:
             raise NotTrainedError("Need to train model before accessing embeddings")
         return self.__embeddings
+    @property
+    def char_embeddings(self):
+        return self.__char_embeddings
+    @property
+    def char_to_id(self):
+        return self.__char_to_id
+    @property
+    def word_to_id(self):
+        return self.__word_to_id
 
     def id_for_word(self, word):
         if self.__word_to_id is None:
