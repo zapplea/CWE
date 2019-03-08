@@ -257,10 +257,14 @@ class GloVeModel():
                     # FIXED:this condition should be eliminated, otherwise several data in the tail will be wasted.
                     # if len(counts) != self.batch_size:
                     #     continue
+                    print('feed_dict...')
                     feed_dict = {
                         self.__focal_input: i_s,
                         self.__context_input: j_s,
+                        self.__focal_chars_input:i_chars,
+                        self.__context_chars_input:j_chars,
                         self.__cooccurrence_count: counts}
+                    print('feed Done')
                     session.run([self.__optimizer], feed_dict=feed_dict)
                     if should_write_summaries and (total_steps + 1) % summary_batch_interval == 0:
                         summary_str = session.run(self.__summary, feed_dict=feed_dict)
@@ -271,6 +275,7 @@ class GloVeModel():
                     output_path = os.path.join(log_dir, "epoch{:03d}.png".format(epoch + 1))
                     self.generate_tsne(output_path, embeddings=current_embeddings)
             self.__embeddings = self.__combined_embeddings.eval()
+            self.__char_embeddings_mat = self.__char_embeddings.eval()
             if should_write_summaries:
                 summary_writer.close()
 
@@ -314,7 +319,7 @@ class GloVeModel():
         return self.__embeddings
     @property
     def char_embeddings(self):
-        return self.__char_embeddings
+        return self.__char_embeddings_mat
     @property
     def char_to_id(self):
         return self.__char_to_id
