@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --get-user-env
-#SBATCH --job-name="CWE"
+#SBATCH --job-name="CWEP"
 #SBATCH --time=140:00:00
 #SBATCH --nodes=1
 #SBATCH --mem=100GB
