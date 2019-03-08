@@ -114,7 +114,7 @@ class GloVeModel():
         padding = tf.ones_like(char_ids)*self.padding_char_id
         condition = tf.equal(padding,char_ids)
         # (batch size, max word len)
-        mask = tf.where(condition,tf.zeros_like(char_ids),tf.ones_like(char_ids))
+        mask = tf.where(condition,tf.zeros_like(char_ids,dtype=tf.float32),tf.ones_like(char_ids,dtype=tf.float32))
         mask = tf.tile(tf.expand_dims(mask,axis=2),multiples=[1,1,self.char_embedding_size])
         return mask
 
@@ -122,13 +122,13 @@ class GloVeModel():
         padding = tf.ones_like(char_ids) * self.padding_char_id
         condition = tf.equal(padding, char_ids)
         # (batch size, max word len)
-        temp = tf.where(condition,tf.zeros_like(char_ids),tf.ones_like(char_ids))
+        temp = tf.where(condition,tf.zeros_like(char_ids,dtype=tf.float32),tf.ones_like(char_ids,dtype=tf.float32))
         # (batch size, )
         char_seq_len = tf.reduce_sum(temp,axis=1)
         # TODO: some char like #OTHER#, its full padded, so, the length is 0
-        condition = tf.equal(char_seq_len,tf.zeros_like(char_seq_len))
+        condition = tf.equal(char_seq_len,tf.zeros_like(char_seq_len,dtype=tf.float32))
         # (batch size, )
-        char_seq_len = tf.where(condition,tf.ones_like(char_seq_len),char_seq_len)
+        char_seq_len = tf.where(condition,tf.ones_like(char_seq_len,dtype=tf.float32),char_seq_len)
         return char_seq_len
 
 
@@ -150,7 +150,9 @@ class GloVeModel():
 
         # (batch size, max word len, char dim)
         focal_chars_mask = self.__padding_char_mask(self.__focal_chars_input)
+        print('lookup focal chars...')
         focal_chars_embeddings = tf.nn.embedding_lookup([self.__focal_chars_input],self.__char_embeddings)*focal_chars_mask
+        print('Done!')
         # (batch size,)
         focal_chars_seq_len = self.__char_seq_len(self.__focal_chars_input)
         # (batch size, char dim)
