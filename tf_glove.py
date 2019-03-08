@@ -138,8 +138,8 @@ class GloVeModel():
         :return: (batch size, char dim)
         """
         # Done: add char input placeholder
-        self.__focal_chars_input = tf.placeholder(tf.int32, shape=(None, self.max_word_len), name='focal_chars')
-        self.__context_chars_input = tf.placeholder(tf.int32, shape=(None, self.max_word_len), name='context_chars')
+        self.__focal_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='focal_chars')
+        self.__context_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='context_chars')
         # Fixed: the #PAD# should be [0, 0, 0,....]
         char_embeddings =  tf.Variable(tf.random_uniform([self.char_vocab_size-1, self.char_embedding_size], 1.0, -1.0),
                                        name="char_embeddings")
@@ -151,8 +151,10 @@ class GloVeModel():
         # (batch size, max word len, char dim)
         focal_chars_mask = self.__padding_char_mask(self.__focal_chars_input)
         print('lookup focal chars...')
-        focal_chars_embeddings = tf.nn.embedding_lookup(self.__focal_chars_input,self.__char_embeddings)*focal_chars_mask
+        print(self.__focal_chars_input)
+        focal_chars_embeddings = tf.nn.embedding_lookup(self.__focal_chars_input,self.__char_embeddings)#*focal_chars_mask
         print('Done!')
+        exit()
         # (batch size,)
         focal_chars_seq_len = self.__char_seq_len(self.__focal_chars_input)
         # (batch size, char dim)
@@ -188,11 +190,11 @@ class GloVeModel():
             # self.__cooccurrence_count = tf.placeholder(tf.float32, shape=[self.batch_size],
             #                                            name="cooccurrence_count")
 
-            self.__focal_input = tf.placeholder(tf.int32, shape=[None],
+            self.__focal_input = tf.placeholder(tf.int32, shape=[None,],
                                                 name="focal_words")
-            self.__context_input = tf.placeholder(tf.int32, shape=[None],
+            self.__context_input = tf.placeholder(tf.int32, shape=[None,],
                                                   name="context_words")
-            self.__cooccurrence_count = tf.placeholder(tf.float32, shape=[None],
+            self.__cooccurrence_count = tf.placeholder(tf.float32, shape=[None,],
                                                        name="cooccurrence_count")
 
 
