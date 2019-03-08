@@ -261,14 +261,12 @@ class GloVeModel():
                     # FIXED:this condition should be eliminated, otherwise several data in the tail will be wasted.
                     # if len(counts) != self.batch_size:
                     #     continue
-                    print('feed_dict...')
                     feed_dict = {
                         self.__focal_input: i_s,
                         self.__context_input: j_s,
                         self.__focal_chars_input:i_chars,
                         self.__context_chars_input:j_chars,
                         self.__cooccurrence_count: counts}
-                    print('feed Done')
                     session.run([self.__optimizer], feed_dict=feed_dict)
                     if should_write_summaries and (total_steps + 1) % summary_batch_interval == 0:
                         summary_str = session.run(self.__summary, feed_dict=feed_dict)
