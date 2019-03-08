@@ -1,4 +1,5 @@
 import tf_glove
+import tf_glove_cwep
 from os import listdir
 from os.path import isfile, join
 import pickle
@@ -7,6 +8,7 @@ import pandas as pd
 import re
 import getpass
 username = getpass.getuser()
+import argparse
 
 def resave():
     rootpath = '/home/yibing/Documents/data/nlp/meituan_jieba'
@@ -78,12 +80,21 @@ def write_embedding(config,dic):
 
 
 def train(corpus,config):
+    print('config: ',config)
     # corpus = [["this", "is", "a", "comment", "."], ["this", "is", "another", "comment", "."]]
 
-    model = tf_glove.GloVeModel(embedding_size=config['model']['word_dim'],
-                                char_embedding_size=config['model']['char_dim'],
-                                context_size=config['model']['n_gram'],
-                                max_word_len = config['corpus']['max_word_len'])
+    if config['mode'] == 'cwe':
+        print('model is cwe')
+        model = tf_glove.GloVeModel(embedding_size=config['model']['word_dim'],
+                                    char_embedding_size=config['model']['char_dim'],
+                                    context_size=config['model']['n_gram'],
+                                    max_word_len = config['corpus']['max_word_len'])
+    elif config['mode'] == 'cwep':
+        print('model is cwep')
+        model = tf_glove_cwep.GloVeModel(embedding_size=config['model']['word_dim'],
+                                    char_embedding_size=config['model']['char_dim'],
+                                    context_size=config['model']['n_gram'],
+                                    max_word_len = config['corpus']['max_word_len'])
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
     word_embeddings = model.embeddings
@@ -109,6 +120,15 @@ def train(corpus,config):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode',choices=['cwe','cwep','cwel'],default='cwe')
+    args = parser.parse_args()
+    output_path = {'cwe':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwe_wordEmb.pkl',
+                          'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwe_charEmb.pkl'},
+                   'cwep':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwep_wordEmb.pkl',
+                           'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwep_charEmb.pkl'},
+                   'cwel':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwel_wordEmb.pkl',
+                           'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwel_charEmb.pkl'}}
     # obedient: Other must be #OTHER#
     config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
                         'corpus_name':'corpus.pkl',
@@ -118,8 +138,8 @@ def main():
                        'char_dim':200,
                        'n_gram':3},
               'train':{'num_epochs':100},
-              'output':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwe_wordEmb.pkl',
-                        'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwe_charEmb.pkl'}
+              'output':output_path[args.mode],
+              'mode':args.mode
               }
     if False:
         # obedient:if you decide to run prepare corpus, need to delete corpus.pkl.

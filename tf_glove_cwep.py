@@ -45,6 +45,32 @@ class GloVeModel():
         self.__build_graph()
         print('Done!')
 
+    def __generate_char_id_ls(self,word):
+        char_ls = list(word)
+        word_len = len(char_ls)
+        char_id_ls = []
+        if word == '#OTHER#':
+            char_id_ls.append(self.__char_to_id['#PAD#'])
+        else:
+            for i in range(word_len):
+                char_id = self.__char_to_id[char_ls[i]]
+                # positioned char id
+                if i == 0:
+                    # Begin char
+                    p_char_id = char_id*3-2
+                elif i < word_len-1:
+                    # Middle char
+                    p_char_id = char_id*3-1
+                else:
+                    # End char
+                    p_char_id = char_id*3
+                char_id_ls.append(p_char_id)
+        if len(char_id_ls) < self.max_word_len:
+            char_id_ls.extend((np.ones(shape=(self.max_word_len-len(char_id_ls),),dtype='int32')*self.padding_char_id).tolist())
+        return char_id_ls
+
+
+
     def __fit_to_corpus(self, corpus, vocab_size, min_occurrences, left_size, right_size):
         word_counts = Counter()
         cooccurrence_counts = defaultdict(float)
@@ -87,24 +113,10 @@ class GloVeModel():
         for words,count in cooccurrence_counts.items():
             if words[0] in self.__word_to_id and words[1] in self.__word_to_id:
                 words_id_pair = (self.__word_to_id[words[0]], self.__word_to_id[words[1]])
-                word0_char_ls = []
-                if words[0] == '#OTHER#':
-                    word0_char_ls.append(self.__char_to_id['#PAD#'])
-                else:
-                    for char in list(words[0]):
-                        word0_char_ls.append(self.__char_to_id[char])
-                if len(word0_char_ls)<self.max_word_len:
-                    word0_char_ls.extend((np.ones(shape=(self.max_word_len-len(word0_char_ls),),dtype='int32')*self.padding_char_id).tolist())
+                word0_char_id_ls = self.__generate_char_id_ls(words[0])
 
-                word1_char_ls = []
-                if words[1] == '#OTHER#':
-                    word1_char_ls.append(self.__char_to_id['#PAD#'])
-                else:
-                    for char in list(words[1]):
-                        word1_char_ls.append(self.__char_to_id[char])
-                if len(word1_char_ls)<self.max_word_len:
-                    word1_char_ls.extend((np.ones(shape=(self.max_word_len-len(word1_char_ls),),dtype='int32')*self.padding_char_id).tolist())
-                chars_id_pair = (tuple(word0_char_ls),tuple(word1_char_ls))
+                word1_char_id_ls = self.__generate_char_id_ls(words[1])
+                chars_id_pair = (tuple(word0_char_id_ls),tuple(word1_char_id_ls))
                 self.__cooccurrence_matrix[(words_id_pair,chars_id_pair)] = count
 
     def __char_compress(self,chars_embeddings):
@@ -141,7 +153,8 @@ class GloVeModel():
         self.__focal_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='focal_chars')
         self.__context_chars_input = tf.placeholder(dtype=tf.int32, shape=(None, self.max_word_len), name='context_chars')
         # Fixed: the #PAD# should be [0, 0, 0,....]
-        char_embeddings =  tf.Variable(tf.random_uniform([self.char_vocab_size-1, self.char_embedding_size], 1.0, -1.0),
+        # Fixed: the #PAD# occupy one position, but other words occupy 3 position
+        char_embeddings =  tf.Variable(tf.random_uniform([3*(self.char_vocab_size-1), self.char_embedding_size], 1.0, -1.0),
                                        name="char_embeddings")
         padding_char_embedding = tf.Variable(tf.zeros(shape=[1,self.char_embedding_size],dtype=tf.float32),
                                              name="padding_char_embeddings")
