@@ -11,3 +11,6 @@ with open('/datastore/liu121/wordEmb/aic2018cwe_wordEmb.pkl','rb') as f:
     print(dic.keys())
     print(dic['word_to_id'])
     print(dic['word_embeddings'])
+
+    #fixme: char['#PAD#'] is not [0,....]
+    # fixme: word_to_id['#PAD#'] doesn't exits

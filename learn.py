@@ -87,13 +87,16 @@ def train(corpus,config):
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
     word_embeddings = model.embeddings
-    padding_word_vec = np.zeros(shape=(1,config['model']['word_dim']))
+    padding_word_vec = np.zeros(shape=(1,config['model']['word_dim']),dtype='float32')
     word_embeddings = np.concatenate([padding_word_vec,word_embeddings],axis=0)
     char_embeddings = model.char_embeddings
     char_to_id = model.char_to_id
     word_to_id = model.word_to_id
+    new_word_to_id = {'#PAD#':0}
+    for word in word_to_id:
+        new_word_to_id[word]=word_to_id[word]+1
     print('write embeddings...')
-    write_embedding(config,{'word_to_id':word_to_id,
+    write_embedding(config,{'word_to_id':new_word_to_id,
                             'char_to_id':char_to_id,
                             'word_embeddings':word_embeddings,
                             'char_embeddings':char_embeddings})
