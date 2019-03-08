@@ -151,7 +151,7 @@ class GloVeModel():
         # (batch size, max word len, char dim)
         focal_chars_mask = self.__padding_char_mask(self.__focal_chars_input)
         print('lookup focal chars...')
-        focal_chars_embeddings = tf.nn.embedding_lookup([self.__focal_chars_input],self.__char_embeddings)*focal_chars_mask
+        focal_chars_embeddings = tf.nn.embedding_lookup(self.__focal_chars_input,self.__char_embeddings)*focal_chars_mask
         print('Done!')
         # (batch size,)
         focal_chars_seq_len = self.__char_seq_len(self.__focal_chars_input)
@@ -162,7 +162,7 @@ class GloVeModel():
 
         # (batch size, max word len, char dim)
         context_chars_mask = self.__padding_char_mask(self.__context_chars_input)
-        context_chars_embeddings = tf.nn.embedding_lookup([self.__context_chars_input],self.__char_embeddings)*context_chars_mask
+        context_chars_embeddings = tf.nn.embedding_lookup(self.__context_chars_input,self.__char_embeddings)*context_chars_mask
         # (batch size,)
         context_chars_seq_len = self.__char_seq_len(self.__context_chars_input)
         # (batch size, char dim)
