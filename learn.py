@@ -112,7 +112,7 @@ def main():
               'model':{'word_dim':300,
                        'char_dim':200,
                        'n_gram':3},
-              'train':{'num_epochs':100},
+              'train':{'num_epochs':5},
               'output':{'word_embeddings_path':'/datastore/liu121/wordEmb/aic2018cwe_wordEmb.pkl',
                         'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwe_charEmb.pkl'}
               }
