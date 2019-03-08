@@ -67,7 +67,7 @@ def analysis(corpus):
 
 def read_corpus(config):
     with open(join(config['corpus']['corpus_path'],config['corpus']['corpus_name']),'rb') as f:
-        corpus = pickle.load(f)
+        corpus = pickle.load(f)[:1000]
     print('corpus size: ',len(corpus))
     return corpus
 
@@ -95,7 +95,6 @@ def train(corpus,config):
                                     char_embedding_size=config['model']['char_dim'],
                                     context_size=config['model']['n_gram'],
                                     max_word_len = config['corpus']['max_word_len'])
-    exit()
     model.fit_to_corpus(corpus)
     model.train(num_epochs=config['train']['num_epochs'])
     word_embeddings = model.embeddings
@@ -138,7 +137,7 @@ def main():
               'model':{'word_dim':300,
                        'char_dim':200,
                        'n_gram':3},
-              'train':{'num_epochs':100},
+              'train':{'num_epochs':5},
               'output':output_path[args.mode],
               'mode':args.mode
               }
