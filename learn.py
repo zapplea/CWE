@@ -116,10 +116,11 @@ def main():
                         'char_embeddings_path':'/datastore/liu121/charEmb/aic2018cwe_charEmb.pkl'}
               }
     # if you decide to run prepare corpus, need to delete corpus.pkl.
-    print('Prepare corpus...')
-    prepare_corpus(config)
-    print('Done!')
-    exit()
+    if True:
+        print('Prepare corpus...')
+        prepare_corpus(config)
+        print('Done!')
+        exit()
     print('Read corpus...')
     corpus = read_corpus(config)
     print('Done!')
