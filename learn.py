@@ -92,10 +92,12 @@ def train(corpus,config):
     char_embeddings = model.char_embeddings
     char_to_id = model.char_to_id
     word_to_id = model.word_to_id
+    print('write embeddings...')
     write_embedding(config,{'word_to_id':word_to_id,
                             'char_to_id':char_to_id,
                             'word_embeddings':word_embeddings,
                             'char_embeddings':char_embeddings})
+    print('Done!')
     # Done: extract word to id and word embedding, char to id and char embedding
     # Done: prepare character vocabulary.
     # Done: add pad to word embedding
