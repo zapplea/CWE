@@ -7,7 +7,7 @@ with open('/datastore/liu121/charEmb/aic2018cwep_charEmb.pkl','rb') as f:
     print(dic['char_embeddings'])
     print('char dic len: ',len(dic['char_to_id']))
     print('char embedding len: ',len(dic['char_embeddings']))
-    exit()
+
 with open('/datastore/liu121/wordEmb/aic2018cwep_wordEmb.pkl','rb') as f:
     dic = pickle.load(f)
     print(dic.keys())
@@ -17,4 +17,4 @@ with open('/datastore/liu121/wordEmb/aic2018cwep_wordEmb.pkl','rb') as f:
     print('word embedding len',len(dic['word_embeddings']))
 
     # fixed: char['#PAD#'] is not [0,....]
-    # fixme: word_to_id['#PAD#'] doesn't exits
+    # fixed: word_to_id['#PAD#'] doesn't exits
