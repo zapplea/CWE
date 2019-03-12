@@ -133,7 +133,7 @@ def main():
     config = {'corpus':{'corpus_path':'/datastore/liu121/sentidata2/data/meituan_jieba',
                         'corpus_name':'corpus.pkl',
                         'max_word_len':11,
-                        'OTHER':'#OTHER#'},
+                        'OTHER':'#UNK#'},
               'model':{'word_dim':300,
                        'char_dim':200,
                        'n_gram':3},

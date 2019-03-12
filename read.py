@@ -16,5 +16,5 @@ with open('/datastore/liu121/wordEmb/aic2018cwep_wordEmb.pkl','rb') as f:
     print('word dic len: ',len(dic['word_to_id']))
     print('word embedding len',len(dic['word_embeddings']))
 
-    #fixme: char['#PAD#'] is not [0,....]
+    # fixed: char['#PAD#'] is not [0,....]
     # fixme: word_to_id['#PAD#'] doesn't exits

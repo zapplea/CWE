@@ -49,7 +49,7 @@ class GloVeModel():
         char_ls = list(word)
         word_len = len(char_ls)
         char_id_ls = []
-        if word == '#OTHER#':
+        if word == '#UNK#':
             char_id_ls.append(self.__char_to_id['#PAD#'])
         else:
             for i in range(word_len):
@@ -92,7 +92,7 @@ class GloVeModel():
         # generate char vocabulary
         self.__chars = set()
         for word in self.__words:
-            if word == '#OTHER#':
+            if word == '#UNK#':
                 continue
             char_ls = list(word)
             for char in char_ls:
