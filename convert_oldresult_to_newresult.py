@@ -10,6 +10,8 @@ def convert(fname):
         word_dic['#UNK#'] = word_dic.pop('#OTHER#')
         print('id of #UNK#: ',word_dic['#UNK#'])
         print('#OTHER# doesn\'t exit: ',str('#OTHER#' not in word_dic))
+    with open(fname+'_v2','wb') as f:
+        pickle.dump({'word_to_id':word_dic,'word_embeddings':word_embeddings},f,protocol=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
