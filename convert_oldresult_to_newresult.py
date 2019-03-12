@@ -1,10 +1,9 @@
 import argparse
 
-def load_data():
-
-
-def convert():
-    pass
+def convert(fname):
+    with open(fname, 'rb') as f:
+        dic = fname
+        word_dic = dic['']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
