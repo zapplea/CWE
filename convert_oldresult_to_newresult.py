@@ -1,8 +1,9 @@
 import argparse
+import pickle
 
 def convert(fname):
     with open(fname, 'rb') as f:
-        dic = fname
+        dic = pickle.load(f)
         word_dic = dic['word_to_id']
         word_embeddings = dic['word_embeddings']
         print('id of #OTHER#: ',word_dic['#OTHER#'])
